@@ -1,4 +1,4 @@
-#Snake
+# Snake
 Zadanie zaliczeniowe dla grafiki 2D w Windowsie. Przy rozwiązaniu zastosowałem:
 
 2 bitmapy
