@@ -7,8 +7,8 @@ using D2D1::BezierSegment;
 using D2D1::QuadraticBezierSegment;
 using D2D1::LinearGradientBrushProperties;
 
-#define NUM_RAD_STOPS 2
-#define NUM_LIN_STOPS 3
+const int NUM_RAD_STOPS = 2;
+const int NUM_LIN_STOPS = 3;
 
 HRESULT Paint::createFactory() {
     if (d2d_factory != nullptr) {
@@ -81,16 +81,31 @@ HRESULT Paint::createLinearBrush() {
     );
 }
 
-void Paint::freeResources() {
-    if (d2d_render_target) d2d_render_target->Release();
-    if (d2d_factory) d2d_factory->Release();
+void Paint::DiscardRenderDeviceResources() {
+    if (lin_brush) lin_brush->Release();
     if (myBrush) myBrush->Release();
+    if (pLogoBitmap) pLogoBitmap->Release();
+    if (pBgBitmap) pBgBitmap->Release();
+    if (d2d_render_target) d2d_render_target->Release();
+}
+
+int Paint::CreateRenderDeviceResources(HWND& hwnd) {
+    if (FAILED(createRenderTarget(hwnd)) ||
+        FAILED(createBrush()) ||
+        FAILED(createLinearBrush()) ||
+        FAILED(createBitmaps())) {
+        return 1;
+    }
+
+    return 0;
+}
+
+void Paint::freeResources() {
+    DiscardRenderDeviceResources();
+    if (d2d_factory) d2d_factory->Release();
     if (write_factory) write_factory->Release();
     if (text_format) text_format->Release();
-    if (lin_brush) lin_brush->Release();
     if (pIWICFactory) pIWICFactory->Release();
-    if (pBgBitmap) pBgBitmap->Release();
-    if (pLogoBitmap) pLogoBitmap->Release();
     if (straightSegment) straightSegment->Release();
     if (curvedSegment) curvedSegment->Release();
     if (headSegment) headSegment->Release();
@@ -107,8 +122,16 @@ void Paint::beginDraw() {
     d2d_render_target->BeginDraw();
 }
 
-void Paint::endDraw() {
-    d2d_render_target->EndDraw();
+int Paint::endDraw(HWND& hwnd) {
+    HRESULT hr = d2d_render_target->EndDraw();
+    if (hr ==  D2DERR_RECREATE_TARGET) {
+        DiscardRenderDeviceResources();
+        return CreateRenderDeviceResources(hwnd);
+    }
+    if (FAILED(hr)) {
+        return 1;
+    }
+    return 0;
 }
 
 HRESULT Paint::createWriteFactory() {
@@ -178,10 +201,6 @@ HRESULT Paint::createIWICFactory() {
 
 HRESULT Paint::createBitmaps() {
     HRESULT hr;
-    // Create the factory
-    if (FAILED(hr = createIWICFactory())) {
-        return hr;
-    }
     if (FAILED(hr = createBitmap(L"bg.png", &pBgBitmap))) {
         return hr;
     }
@@ -490,7 +509,7 @@ void Paint::drawCandy(int x, int y, D2D1::ColorF color) {
     d2d_render_target->DrawEllipse(ellipse, myBrush, 1.0f);
 }
 
-HRESULT Paint::drawEatingParticle(int x, int y, float orientation, D2D1::ColorF color) {
+HRESULT Paint::drawEatingParticle(int x, int y, int orientation, D2D1::ColorF color) {
     ID2D1TransformedGeometry* transformed_geometry;
 
     const D2D1_MATRIX_3X2_F transformationMatrix = getTransformation(x, y, orientation + 1);
@@ -537,11 +556,11 @@ HRESULT Paint::createEatingParticle() {
 }
 
 HRESULT Paint::drawEatingAnimation(int x, int y, int orientation, D2D1::ColorF color) {
-    HRESULT hr = drawEatingParticle(x, y, orientation + 2.5f, color);
+    HRESULT hr = drawEatingParticle(x, y, orientation + 2, color);
     if (FAILED(hr)) {
         return hr;
     }
-    return drawEatingParticle(x, y, orientation + 3.0f, color);
+    return drawEatingParticle(x, y, orientation + 3, color);
 }
 
 int Paint::createResources(HWND& hwnd) {
@@ -551,20 +570,12 @@ int Paint::createResources(HWND& hwnd) {
         return 1;
     }
 
+    if (FAILED(hret = createIWICFactory())) {
+        return hret;
+    }
+
     hret = createRectangleFromWindow(hwnd);
     if (hret != S_OK) {
-        return 1;
-    }
-
-    if (FAILED(createRenderTarget(hwnd))) {
-        return 1;
-    }
-
-    if (FAILED(createBrush())) {
-        return 1;
-    }
-
-    if (FAILED(createLinearBrush())) {
         return 1;
     }
 
@@ -573,10 +584,6 @@ int Paint::createResources(HWND& hwnd) {
     }
 
     if (FAILED(createTextFormat())) {
-        return 1;
-    }
-
-    if (FAILED(createBitmaps())) {
         return 1;
     }
 
@@ -597,6 +604,10 @@ int Paint::createResources(HWND& hwnd) {
     }
 
     if (FAILED(createEatingParticle())) {
+        return 1;
+    }
+
+    if (CreateRenderDeviceResources(hwnd)) {
         return 1;
     }
     

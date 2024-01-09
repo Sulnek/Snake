@@ -10,16 +10,16 @@
 #include "Paint.h"
 #include "Segment.h"
 
-// Hash function for pairs of integers
-struct PairHash {
-	inline size_t operator()(const std::pair<int, int>& p) const {
-		// Combine hashes of the two integers using bitwise operations
-		return (size_t) p.first * 809 + (size_t) p.second;
-	}
-};
-
 class Snake {
 private:
+	// Hash function for pairs of integers
+	struct PairHash {
+		inline size_t operator()(const std::pair<int, int>& p) const {
+			// Combine hashes of the two integers using bitwise operations
+			return (size_t)p.first * 809 + (size_t)p.second;
+		}
+	};
+
 	Paint* paint;
 	/************************************************************************
 	*					0 : Snake going up the screen						*

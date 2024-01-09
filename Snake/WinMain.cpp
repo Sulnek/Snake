@@ -43,6 +43,10 @@ int CALLBACK wWinMain(
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
+    HCURSOR hc = (HCURSOR)LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    if (hc != nullptr) {
+        wc.hCursor = hc;
+    }
 
     ATOM ret = RegisterClass(&wc);
     if (!ret) {
@@ -161,7 +165,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             paint->writeText(formattedText, D2D1::ColorF(0.0f, 0.0f, 0.0f), bufferSize, MARGIN, MARGIN);
         }
 
-        paint->endDraw();
+        if (paint->endDraw(hwnd)) {
+            return 1; // restoring render target
+        }
     }
     return 0;
 

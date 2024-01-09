@@ -17,36 +17,36 @@
 #include <math.h>
 
 
-#define WIN_WIDTH 1200
-#define WIN_HEIGHT 620
-#define GRID_WIDTH 40
-#define GRID_HEIGHT 20
-#define MARGIN 20
+const int WIN_WIDTH = 1200;
+const int WIN_HEIGHT = 620;
+const int GRID_WIDTH = 40;
+const int GRID_HEIGHT = 20;
+const int MARGIN = 20;
 
-#define FIELD_WIDTH (WIN_WIDTH - 2 * MARGIN) / GRID_WIDTH
-#define FIELD_HEIGHT (WIN_HEIGHT - 2 * MARGIN) / GRID_HEIGHT
+const int FIELD_WIDTH = (WIN_WIDTH - 2 * MARGIN) / GRID_WIDTH;
+const int FIELD_HEIGHT = (WIN_HEIGHT - 2 * MARGIN) / GRID_HEIGHT;
 
-#define SPEED 0.4
-#define FONT_SIZE 50.0f
-#define BOARDER_WIDTH 5.0f
+const float SPEED = (float) 0.4;
+const float FONT_SIZE = 50.0f;
+const float BOARDER_WIDTH = 5.0f;
 
 class Paint {
 private:
-	static inline ID2D1Factory7* d2d_factory = nullptr;
-	static inline ID2D1HwndRenderTarget* d2d_render_target = nullptr;
-	static inline RECT rc;
-	static inline ID2D1SolidColorBrush* myBrush = nullptr;
-	static inline ID2D1LinearGradientBrush* lin_brush = nullptr;
-	static inline IDWriteFactory* write_factory = nullptr;
-	static inline IDWriteTextFormat* text_format = nullptr;
-	static inline IWICImagingFactory* pIWICFactory = nullptr;
-	static inline ID2D1Bitmap* pBgBitmap = nullptr;
-	static inline ID2D1Bitmap* pLogoBitmap = nullptr;
-	static inline ID2D1PathGeometry* straightSegment = nullptr;
-	static inline ID2D1PathGeometry* curvedSegment = nullptr;
-	static inline ID2D1PathGeometry* headSegment = nullptr;
-	static inline ID2D1PathGeometry* tailSegment = nullptr;
-	static inline ID2D1PathGeometry* eatingParticleSegment = nullptr;
+	ID2D1Factory7* d2d_factory = nullptr;
+	ID2D1HwndRenderTarget* d2d_render_target = nullptr;
+	RECT rc;
+	ID2D1SolidColorBrush* myBrush = nullptr;
+	ID2D1LinearGradientBrush* lin_brush = nullptr;
+	IDWriteFactory* write_factory = nullptr;
+	IDWriteTextFormat* text_format = nullptr;
+	IWICImagingFactory* pIWICFactory = nullptr;
+	ID2D1Bitmap* pBgBitmap = nullptr;
+	ID2D1Bitmap* pLogoBitmap = nullptr;
+	ID2D1PathGeometry* straightSegment = nullptr;
+	ID2D1PathGeometry* curvedSegment = nullptr;
+	ID2D1PathGeometry* headSegment = nullptr;
+	ID2D1PathGeometry* tailSegment = nullptr;
+	ID2D1PathGeometry* eatingParticleSegment = nullptr;
 
 	HRESULT createIWICFactory();
 
@@ -76,11 +76,15 @@ private:
 
 	HRESULT createTail();
 
+	void DiscardRenderDeviceResources();
+
+	int CreateRenderDeviceResources(HWND& hwnd);
+
 	void freeResources();
 
 	const D2D1_MATRIX_3X2_F getTransformation(int x, int y, int orientation);
 
-	HRESULT drawEatingParticle(int x, int y, float orientation, D2D1::ColorF color);
+	HRESULT drawEatingParticle(int x, int y, int orientation, D2D1::ColorF color);
 
 	HRESULT createEatingParticle();
 
@@ -92,7 +96,7 @@ public:
 
 	void beginDraw();
 
-	void endDraw();
+	int endDraw(HWND& hwnd);
 
 	void writeText(const WCHAR* text, D2D1::ColorF col, UINT32 len, float x, float y);
 
